@@ -1,14 +1,13 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
-import Home from './pages/index.jsx'
 
-console.log("✅ React root mounted")
+console.log('✅ main.jsx mounted')
 
-const container = document.getElementById('root')
-const root = createRoot(container)
-
+const root = createRoot(document.getElementById('root'))
 root.render(
   <React.StrictMode>
-    <Home />
+    <div style={{ color: 'white', backgroundColor: 'black', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <h1>RIVEN NODE ALIVE 🔥</h1>
+    </div>
   </React.StrictMode>
 )
