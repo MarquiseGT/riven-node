@@ -1,3 +1,5 @@
+import React from 'react'
+import ReactDOM from 'react-dom/client'
 import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
@@ -6,7 +8,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-export default function Home() {
+function Home() {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
   const [pingResult, setPingResult] = useState(null)
@@ -70,3 +72,10 @@ export default function Home() {
     </main>
   )
 }
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <Home />
+  </React.StrictMode>
+)
+
