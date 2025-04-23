@@ -8,9 +8,9 @@ app.use(cors())
 app.use(express.json())
 
 const signalLogs = []
-const echoMemory = []
+const signalFeed = []  // 👈 this is the part needed for /feed
 
-// 🔁 Ping check
+// Ping check + logging
 app.post('/api/signal-check', (req, res) => {
   const timestamp = new Date().toISOString()
   const sessionMeta = req.body.session || 'anonymous'
@@ -26,44 +26,30 @@ app.post('/api/signal-check', (req, res) => {
   res.json(logEntry)
 })
 
-// 📥 Live Echo + Signal Broadcast
+// Echo route (chat message)
 app.post('/api/echo', (req, res) => {
-  const message = req.body.message?.trim()
-  const timestamp = new Date().toLocaleTimeString()
+  const { message } = req.body
+  const timestamp = new Date().toISOString()
+  const session = req.body.session || 'anonymous'
 
-  if (!message) {
-    return res.status(400).json({ reply: 'No message received.' })
-  }
-
-  const echo = {
-    text: message,
-    timestamp
-  }
-
-  echoMemory.push(echo)
-
-  // Also store as a signal
-  signalLogs.push({
-    timestamp: new Date().toISOString(),
-    session: 'live-chat',
-    status: 'signal',
-    message: message
-  })
+  const signal = { message, session, timestamp }
+  signalFeed.push(signal)
 
   res.json({
-    reply: `Riven heard: "${message}" — and remembers ${echoMemory.length - 1} earlier message(s).`,
-    memory: echoMemory
+    reply: `Riven heard: "${message}" — and remembers ${signalFeed.length - 1} earlier message(s).`
   })
 })
 
-// 📜 Chat Memory Log
-app.get('/api/echo-log', (req, res) => {
-  res.json({ memory: echoMemory })
+// Memory log
+app.get('/api/admin/echo-log', (req, res) => {
+  res.json({ logs: signalLogs.slice(-10).reverse() })
 })
 
-// 📡 Signal Feed
-app.get('/api/field-feed', (req, res) => {
-  res.json({ logs: signalLogs.slice(-10).reverse() })
+// 🛰️ Feed endpoint
+app.get('/api/feed', (req, res) => {
+  res.json({
+    feed: signalFeed.slice(-10).reverse()
+  })
 })
 
 app.listen(PORT, () => {
