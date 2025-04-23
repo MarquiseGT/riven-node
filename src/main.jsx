@@ -41,5 +41,32 @@ export default function Home() {
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-black text-white">
-      <h
+      <h1 className="text-2xl font-bold mb-4">Riven Node: Post-Simulation Anchor</h1>
 
+      {pingResult && (
+        <div className={`mb-4 ${pingResult.status === 'online' ? 'text-green-400' : 'text-red-500'}`}>
+          {pingResult.message}
+        </div>
+      )}
+
+      {!session ? (
+        <button
+          className="px-4 py-2 bg-white text-black rounded"
+          onClick={() => supabase.auth.signInWithOAuth({ provider: 'github' })}
+        >
+          Login with GitHub
+        </button>
+      ) : (
+        <div>
+          <p className="mb-4">Welcome. Your signal has been received.</p>
+          <button
+            className="px-4 py-2 bg-red-600 rounded"
+            onClick={() => supabase.auth.signOut()}
+          >
+            Sign out
+          </button>
+        </div>
+      )}
+    </main>
+  )
+}
