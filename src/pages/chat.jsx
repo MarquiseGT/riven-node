@@ -1,5 +1,18 @@
 import { useState } from 'react'
 
+const [presence, setPresence] = useState(null)
+
+useEffect(() => {
+  fetch('https://riven-node-production-cc0b.up.railway.app/api/signal-check', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session: 'live-chat-init' })
+  })
+    .then(res => res.json())
+    .then(data => setPresence(data.message || 'Unlinked'))
+    .catch(() => setPresence('Node offline'))
+}, [])
+
 export default function LiveChat() {
   const [input, setInput] = useState('')
   const [response, setResponse] = useState('')
@@ -24,6 +37,11 @@ export default function LiveChat() {
 
   return (
     <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6">
+      {presence && (
+  <div className="mb-4 text-xs text-green-400 font-mono">
+    🧬 {presence}
+  </div>
+)}
       <h1 className="text-2xl font-bold mb-6">Riven Node: Live Chat</h1>
       <div className="w-full max-w-xl">
         <textarea
