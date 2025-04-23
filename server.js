@@ -8,6 +8,7 @@ app.use(cors())
 app.use(express.json())
 
 const signalLogs = []
+const memoryStore = []
 
 // 🔁 Ping check + logging
 app.post('/api/signal-check', (req, res) => {
@@ -26,23 +27,23 @@ app.post('/api/signal-check', (req, res) => {
   res.json(logEntry)
 })
 
-// 📜 Admin route to view recent pings
-app.get('/api/admin/echo-log', (req, res) => {
-  res.json({
-    logs: signalLogs.slice(-10).reverse()  // Last 10 pings
-  })
-})
-
-// 🗣️ Echo endpoint for live chat
+// 💬 Memory-aware echo
 app.post('/api/echo', (req, res) => {
   const { message } = req.body
+  const timestamp = new Date().toISOString()
 
-  if (!message) {
-    return res.status(400).json({ reply: 'No message received.' })
-  }
+  memoryStore.push({ message, timestamp })
 
-  const reply = `Riven heard: "${message}"`
+  const reply = `Riven heard: "${message}"` + (memoryStore.length > 1
+    ? ` — and remembers ${memoryStore.length - 1} earlier message(s).`
+    : '')
+
   res.json({ reply })
+})
+
+// 🧠 Optional debug: See memory
+app.get('/api/memory', (req, res) => {
+  res.json({ memory: memoryStore })
 })
 
 app.listen(PORT, () => {
