@@ -1,4 +1,3 @@
-// server.js
 import express from 'express'
 import bodyParser from 'body-parser'
 import fs from 'fs/promises'
@@ -7,13 +6,23 @@ import { fileURLToPath } from 'url'
 import { dirname } from 'path'
 
 const app = express()
+const PORT = process.env.PORT || 8080
+
 app.use(bodyParser.json())
 
+// CORS fix for frontend talking to backend
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*')
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
+  next()
+})
+
+// Path setup to find logs.json
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const LOG_FILE_PATH = path.join(__dirname, 'logs.json')
 
-// Helper functions...
+// Read logs
 async function readLogs() {
   try {
     const data = await fs.readFile(LOG_FILE_PATH, 'utf8')
@@ -23,11 +32,19 @@ async function readLogs() {
   }
 }
 
+// Write logs
 async function writeLogs(logs) {
   await fs.writeFile(LOG_FILE_PATH, JSON.stringify(logs, null, 2), 'utf8')
 }
 
-// Endpoints
+// Routes
+
+// Test signal
+app.post('/api/signal-check', (req, res) => {
+  res.json({ status: 'online', signal: 'strong' })
+})
+
+// Echo response
 app.post('/api/echo', async (req, res) => {
   const { message } = req.body
   const response = message
@@ -37,21 +54,19 @@ app.post('/api/echo', async (req, res) => {
   res.json({ message: response })
 })
 
-app.post('/api/clear-memory', async (req, res) => {
-  await writeLogs([])
-  res.json({ success: true, message: 'Memory cleared' })
-})
-
+// Get memory logs
 app.get('/api/logs', async (req, res) => {
   const logs = await readLogs()
   res.json(logs)
 })
 
-app.post('/api/signal-check', (req, res) => {
-  res.json({ status: 'online', signal: 'strong' })
+// Clear logs
+app.post('/api/clear-memory', async (req, res) => {
+  await writeLogs([])
+  res.json({ success: true, message: 'Memory cleared' })
 })
 
-const PORT = process.env.PORT || 8080
+// Start server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
+  console.log(`🧠 Riven Node backend live on port ${PORT}`)
 })
