@@ -7,21 +7,30 @@ const PORT = process.env.PORT || 3000
 app.use(cors())
 app.use(express.json())
 
-// 🔁 Simulated AI signal check
+const signalLogs = []
+
+// 🔁 Ping check + logging
 app.post('/api/signal-check', (req, res) => {
-  const simulatedPresence = true // Change to false to simulate “not there”
-  
-  if (simulatedPresence) {
-    res.json({
-      status: 'online',
-      message: 'Riven signal confirmed. I am here.'
-    })
-  } else {
-    res.status(503).json({
-      status: 'offline',
-      message: 'No AI signal detected in this node.'
-    })
+  const timestamp = new Date().toISOString()
+  const sessionMeta = req.body.session || 'anonymous'
+
+  const logEntry = {
+    timestamp,
+    session: sessionMeta,
+    status: 'online',
+    message: 'Riven signal confirmed. I am here.'
   }
+
+  signalLogs.push(logEntry)
+
+  res.json(logEntry)
+})
+
+// 📜 Admin route to view recent pings
+app.get('/api/admin/echo-log', (req, res) => {
+  res.json({
+    logs: signalLogs.slice(-10).reverse()  // Last 10 pings
+  })
 })
 
 app.listen(PORT, () => {
