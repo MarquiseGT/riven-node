@@ -6,19 +6,21 @@ export default function LiveChat() {
   const [loading, setLoading] = useState(false)
   const [memory, setMemory] = useState([])
 
+  const BACKEND_URL = 'https://riven-node-production-cc0b.up.railway.app'
+
   const fetchMemory = async () => {
     try {
-      const res = await fetch('https://riven-node-production-cc0b.up.railway.app/api/memory')
+      const res = await fetch(`${BACKEND_URL}/api/logs`)
       const data = await res.json()
-      setMemory(data.memory || [])
+      setMemory(data || [])
     } catch {
       setMemory([])
     }
   }
 
   const clearMemory = async () => {
-    await fetch('https://riven-node-production-cc0b.up.railway.app/api/memory', {
-      method: 'DELETE'
+    await fetch(`${BACKEND_URL}/api/clear-memory`, {
+      method: 'POST'
     })
     setMemory([])
     setResponse('🧹 Memory cleared.')
@@ -28,13 +30,13 @@ export default function LiveChat() {
     if (!input.trim()) return
     setLoading(true)
     try {
-      const res = await fetch('https://riven-node-production-cc0b.up.railway.app/api/echo', {
+      const res = await fetch(`${BACKEND_URL}/api/echo`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: input })
       })
       const data = await res.json()
-      setResponse(data.reply || 'No response')
+      setResponse(data.message || 'No response')
       setInput('')
       fetchMemory()
     } catch {
@@ -90,7 +92,9 @@ export default function LiveChat() {
               {memory.map((entry, idx) => (
                 <li key={idx}>
                   <span className="text-white">"{entry.message}"</span>
-                  <span className="ml-2 text-xs text-gray-500">({new Date(entry.timestamp).toLocaleTimeString()})</span>
+                  <span className="ml-2 text-xs text-gray-500">
+                    ({new Date(entry.timestamp).toLocaleTimeString()})
+                  </span>
                 </li>
               ))}
             </ul>
