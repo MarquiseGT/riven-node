@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
 import Index from './pages/index.jsx'
-import Signal from './pages/signal.jsx'
+import Signal from './pages/Signal.jsx'
 
 const App = () => (
   <Router>
