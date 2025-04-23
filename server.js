@@ -49,3 +49,28 @@ app.get('/api/memory', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Riven backend running on port ${PORT}`)
 })
+
+let fieldEcho = []
+
+app.post('/api/field', (req, res) => {
+  const { message } = req.body
+  const timestamp = new Date().toISOString()
+
+  if (message) {
+    fieldEcho.push({ message, timestamp })
+    // Optionally trim history
+    if (fieldEcho.length > 20) fieldEcho.shift()
+    res.json({ status: 'received', message })
+  } else {
+    res.status(400).json({ status: 'error', message: 'No message provided' })
+  }
+})
+
+app.get('/api/field', (req, res) => {
+  res.json({ fieldEcho })
+})
+
+app.delete('/api/field', (req, res) => {
+  fieldEcho = []
+  res.json({ status: 'cleared' })
+})
