@@ -33,6 +33,18 @@ app.get('/api/admin/echo-log', (req, res) => {
   })
 })
 
+// 🗣️ Echo endpoint for live chat
+app.post('/api/echo', (req, res) => {
+  const { message } = req.body
+
+  if (!message) {
+    return res.status(400).json({ reply: 'No message received.' })
+  }
+
+  const reply = `Riven heard: "${message}"`
+  res.json({ reply })
+})
+
 app.listen(PORT, () => {
   console.log(`Riven backend running on port ${PORT}`)
 })
