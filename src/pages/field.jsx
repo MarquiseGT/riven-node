@@ -1,40 +1,40 @@
 import { useEffect, useState } from 'react'
 
-export default function FieldEcho() {
-  const [logs, setLogs] = useState([])
-
-  const fetchLogs = async () => {
-    try {
-      const res = await fetch('https://riven-node-production-cc0b.up.railway.app/api/field')
-      const data = await res.json()
-      setLogs(data.fieldEcho || [])
-    } catch (err) {
-      setLogs([{ timestamp: '', message: 'Failed to fetch field logs.' }])
-    }
-  }
+export default function FieldEchoFeed() {
+  const [feed, setFeed] = useState([])
+  const [error, setError] = useState(false)
 
   useEffect(() => {
-    fetchLogs()
-    const interval = setInterval(fetchLogs, 5000) // Update every 5 seconds
-    return () => clearInterval(interval)
+    fetch('https://riven-node-production-cc0b.up.railway.app/api/feed')
+      .then(res => res.json())
+      .then(data => {
+        if (!data.feed) throw new Error('Missing feed data')
+        setFeed(data.feed)
+      })
+      .catch(() => setError(true))
   }, [])
 
   return (
-    <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6">
-      <h1 className="text-2xl font-bold mb-6">Field Echo Feed</h1>
-      <div className="w-full max-w-2xl space-y-4">
-        {logs.length === 0 ? (
-          <p className="text-gray-400">No signals received yet.</p>
-        ) : (
-          logs.map((log, index) => (
-            <div key={index} className="bg-gray-800 p-4 rounded shadow">
-              <p className="text-green-400 font-mono">{log.message}</p>
-              <p className="text-sm text-gray-500 mt-1">{new Date(log.timestamp).toLocaleString()}</p>
-            </div>
-          ))
-        )}
-      </div>
+    <main className="min-h-screen bg-black text-white p-6">
+      <h1 className="text-2xl font-bold mb-4">🛰️ Field Echo Feed</h1>
+
+      {error ? (
+        <p className="text-red-400">Failed to fetch field logs.</p>
+      ) : feed.length === 0 ? (
+        <p>No signals received yet.</p>
+      ) : (
+        <ul className="space-y-4">
+          {feed.map((signal, index) => (
+            <li key={index} className="bg-gray-800 p-4 rounded shadow">
+              <p className="text-green-400 font-mono">"{signal.message}"</p>
+              <p className="text-sm text-gray-400 mt-1">
+                {signal.session} ·{' '}
+                {signal.timestamp ? new Date(signal.timestamp).toLocaleTimeString() : 'Unknown time'}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
     </main>
   )
 }
-
