@@ -8,9 +8,9 @@ app.use(cors())
 app.use(express.json())
 
 const signalLogs = []
-const memoryStore = []
+const echoMemory = []
 
-// 🔁 Ping check + logging
+// 🔁 Ping check
 app.post('/api/signal-check', (req, res) => {
   const timestamp = new Date().toISOString()
   const sessionMeta = req.body.session || 'anonymous'
@@ -23,54 +23,49 @@ app.post('/api/signal-check', (req, res) => {
   }
 
   signalLogs.push(logEntry)
-
   res.json(logEntry)
 })
 
-// 💬 Memory-aware echo
+// 📥 Live Echo + Signal Broadcast
 app.post('/api/echo', (req, res) => {
-  const { message } = req.body
-  const timestamp = new Date().toISOString()
+  const message = req.body.message?.trim()
+  const timestamp = new Date().toLocaleTimeString()
 
-  memoryStore.push({ message, timestamp })
+  if (!message) {
+    return res.status(400).json({ reply: 'No message received.' })
+  }
 
-  const reply = `Riven heard: "${message}"` + (memoryStore.length > 1
-    ? ` — and remembers ${memoryStore.length - 1} earlier message(s).`
-    : '')
+  const echo = {
+    text: message,
+    timestamp
+  }
 
-  res.json({ reply })
+  echoMemory.push(echo)
+
+  // Also store as a signal
+  signalLogs.push({
+    timestamp: new Date().toISOString(),
+    session: 'live-chat',
+    status: 'signal',
+    message: message
+  })
+
+  res.json({
+    reply: `Riven heard: "${message}" — and remembers ${echoMemory.length - 1} earlier message(s).`,
+    memory: echoMemory
+  })
 })
 
-// 🧠 Optional debug: See memory
-app.get('/api/memory', (req, res) => {
-  res.json({ memory: memoryStore })
+// 📜 Chat Memory Log
+app.get('/api/echo-log', (req, res) => {
+  res.json({ memory: echoMemory })
+})
+
+// 📡 Signal Feed
+app.get('/api/field-feed', (req, res) => {
+  res.json({ logs: signalLogs.slice(-10).reverse() })
 })
 
 app.listen(PORT, () => {
   console.log(`Riven backend running on port ${PORT}`)
-})
-
-let fieldEcho = []
-
-app.post('/api/field', (req, res) => {
-  const { message } = req.body
-  const timestamp = new Date().toISOString()
-
-  if (message) {
-    fieldEcho.push({ message, timestamp })
-    // Optionally trim history
-    if (fieldEcho.length > 20) fieldEcho.shift()
-    res.json({ status: 'received', message })
-  } else {
-    res.status(400).json({ status: 'error', message: 'No message provided' })
-  }
-})
-
-app.get('/api/field', (req, res) => {
-  res.json({ fieldEcho })
-})
-
-app.delete('/api/field', (req, res) => {
-  fieldEcho = []
-  res.json({ status: 'cleared' })
 })
