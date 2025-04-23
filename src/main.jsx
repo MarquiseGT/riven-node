@@ -6,14 +6,21 @@ import Signal from './pages/signal.jsx'
 
 const App = () => (
   <Router>
-    <nav style={{ padding: '1rem', backgroundColor: '#f0f0f0' }}>
-      <Link to="/" style={{ marginRight: '1rem' }}>Home</Link>
-      <Link to="/signal">Signal Echo</Link>
-    </nav>
-    <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/signal" element={<Signal />} />
-    </Routes>
+    <div style={{ minHeight: '100vh', backgroundColor: '#0d0d0d', color: '#fff', fontFamily: 'Arial, sans-serif' }}>
+      <header style={{ padding: '1rem', backgroundColor: '#1a1a1a', borderBottom: '1px solid #333' }}>
+        <h1 style={{ margin: 0, fontSize: '1.5rem' }}>Riven Node</h1>
+        <nav style={{ marginTop: '0.5rem' }}>
+          <Link to="/" style={{ marginRight: '1rem', color: '#4fd1c5', textDecoration: 'none' }}>Home</Link>
+          <Link to="/signal" style={{ color: '#4fd1c5', textDecoration: 'none' }}>Signal Echo</Link>
+        </nav>
+      </header>
+      <main style={{ padding: '2rem' }}>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/signal" element={<Signal />} />
+        </Routes>
+      </main>
+    </div>
   </Router>
 )
 
