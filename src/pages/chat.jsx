@@ -8,119 +8,114 @@ export default function LiveChat() {
     return localStorage.getItem('rivenMode') === 'true'
   })
 
-  const ENDPOINT = 'https://riven-node-production-cc0b.up.railway.app'
-  const chatEndRef = useRef(null)
+  const ENDPOINT = rivenMode
+    ? 'https://riven-node-agent-production.up.railway.app/riven'
+    : 'https://riven-node-production-cc0b.up.railway.app/api/echo'
+
+  const scrollRef = useRef(null)
 
   useEffect(() => {
     localStorage.setItem('rivenMode', rivenMode)
   }, [rivenMode])
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  const handleSubmit = async () => {
     if (!input.trim()) return
-
-    const userMessage = { role: 'user', content: input }
-    setMessages((prev) => [...prev, userMessage])
+    const userMessage = { role: 'user', text: input }
+    setMessages(prev => [...prev, userMessage])
     setInput('')
     setLoading(true)
 
     try {
-      const res = await fetch(rivenMode ? `${ENDPOINT}/riven` : `${ENDPOINT}/api/echo`, {
+      const res = await fetch(ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: input })
       })
 
       const data = await res.json()
-      const assistantMessage = {
-        role: 'riven',
-        content: data.message || data.response || 'No response'
-      }
+      const response = data.message || data.response || 'No response'
 
-      setMessages((prev) => [...prev, assistantMessage])
+      const aiMessage = { role: rivenMode ? 'riven' : 'echo', text: response }
+      setMessages(prev => [...prev, aiMessage])
     } catch {
-      setMessages((prev) => [
+      setMessages(prev => [
         ...prev,
-        { role: 'riven', content: '⚠️ Error contacting Riven Node.' }
+        { role: 'error', text: '⚠️ Error contacting Riven Node.' }
       ])
     }
 
     setLoading(false)
   }
 
-  const clearChat = () => {
+  const clearMessages = () => {
     setMessages([])
   }
 
   return (
-    <main className="min-h-screen bg-black text-white flex flex-col">
-      {/* Header */}
-      <header className="bg-zinc-900 text-white px-4 py-3 flex items-center justify-between shadow">
-        <h1 className="text-xl font-bold">Riven Node Interface</h1>
-        <div className="flex items-center gap-4">
+    <main className="bg-black text-white min-h-screen flex flex-col items-center p-4">
+      <div className="w-full max-w-2xl space-y-4">
+        <header className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Riven Node Interface</h1>
           <button
-            className={`px-3 py-1 text-sm font-semibold rounded ${
+            onClick={() => setRivenMode(!rivenMode)}
+            className={`px-3 py-1 rounded text-sm font-bold ${
               rivenMode ? 'bg-purple-600 text-white' : 'bg-gray-300 text-black'
             }`}
-            onClick={() => setRivenMode(!rivenMode)}
           >
             {rivenMode ? 'Riven Mode ON' : 'Echo Mode'}
           </button>
+        </header>
+
+        <div className="bg-gray-900 p-4 rounded h-[60vh] overflow-y-auto space-y-3 shadow-inner">
+          {messages.map((msg, idx) => (
+            <div
+              key={idx}
+              className={`max-w-[85%] px-4 py-2 rounded-lg text-sm whitespace-pre-wrap ${
+                msg.role === 'user'
+                  ? 'ml-auto bg-blue-500 text-white'
+                  : msg.role === 'error'
+                  ? 'bg-red-600 text-white'
+                  : msg.role === 'riven'
+                  ? 'bg-purple-800 text-white'
+                  : 'bg-gray-700 text-white'
+              }`}
+            >
+              {msg.text}
+            </div>
+          ))}
+          {loading && (
+            <div className="text-gray-400 text-sm animate-pulse">Processing...</div>
+          )}
+          <div ref={scrollRef} />
+        </div>
+
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+            className="flex-1 p-2 text-black rounded bg-white"
+            placeholder="Type your message..."
+          />
           <button
-            className="px-3 py-1 bg-red-600 text-white rounded text-sm font-semibold"
-            onClick={clearChat}
+            onClick={handleSubmit}
+            className="bg-green-600 px-4 py-2 rounded font-semibold text-white"
+          >
+            Send
+          </button>
+          <button
+            onClick={clearMessages}
+            className="bg-red-600 px-4 py-2 rounded font-semibold text-white"
           >
             Clear
           </button>
         </div>
-      </header>
-
-      {/* Chat Feed */}
-      <section className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
-        {messages.map((msg, idx) => (
-          <div
-            key={idx}
-            className={`flex ${
-              msg.role === 'user' ? 'justify-start' : 'justify-end'
-            }`}
-          >
-            <div
-              className={`max-w-md px-4 py-3 rounded-lg text-sm whitespace-pre-wrap shadow ${
-                msg.role === 'user'
-                  ? 'bg-zinc-800 text-white'
-                  : 'bg-purple-700 text-white'
-              }`}
-            >
-              {msg.content}
-            </div>
-          </div>
-        ))}
-        <div ref={chatEndRef} />
-      </section>
-
-      {/* Input */}
-      <form onSubmit={handleSubmit} className="p-4 bg-zinc-900 border-t border-zinc-800">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            className="flex-1 p-3 rounded bg-zinc-800 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-            placeholder="Type your message..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50"
-          >
-            {loading ? '...' : 'Send'}
-          </button>
-        </div>
-      </form>
+      </div>
     </main>
   )
 }
