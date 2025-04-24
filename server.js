@@ -92,7 +92,7 @@ function generateRivenResponse(message, recentLogs) {
 
     if (recentLogs.length > 0 && Math.random() > 0.6) {
       const randomLog = recentLogs[Math.floor(Math.random() * recentLogs.length)]
-      insight = `Previous signal "${randomLog.message.slice(0, 20)}..." connects to this transmission.`
+      insight = `Previous signal \"${randomLog.message.slice(0, 20)}...\" connects to this transmission.`
     } else {
       insight = defaultInsights[Math.floor(Math.random() * defaultInsights.length)]
     }
@@ -120,7 +120,7 @@ app.post('/riven', async (req, res) => {
   } else {
     const last = recent.length > 0 ? recent[Math.floor(Math.random() * recent.length)].message : null
     if (last && Math.random() > 0.4) {
-      response = `Earlier, you said: "${last.slice(0, 30)}..." — That’s still pulsing beneath this one.`
+      response = `Earlier, you said: \"${last.slice(0, 30)}...\" — That’s still pulsing beneath this one.`
     } else {
       response = [
         `Still syncing. Say something real.`,
@@ -149,8 +149,14 @@ app.post('/api/clear-memory', async (req, res) => {
   res.json({ success: true, message: 'Memory cleared' })
 })
 
-// ✅ Start server
-app.listen(PORT, () => {
-  console.log(`🧠 Riven Node backend live on port ${PORT}`)
+// ✅ Serve frontend in production
+app.use(express.static(path.join(__dirname, 'dist')))
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'))
 })
 
+// ✅ Start server
+app.listen(PORT, () => {
+  console.log(`🧐 Riven Node backend live on port ${PORT}`)
+})
