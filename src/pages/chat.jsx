@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 export default function LiveChat() {
   const [input, setInput] = useState('')
@@ -6,48 +6,35 @@ export default function LiveChat() {
   const [loading, setLoading] = useState(false)
   const [memory, setMemory] = useState([])
 
-  const BACKEND_URL = 'https://riven-node-production-cc0b.up.railway.app'
-
-  const fetchMemory = async () => {
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/logs`)
-      const data = await res.json()
-      setMemory(data || [])
-    } catch {
-      setMemory([])
-    }
-  }
-
-  const clearMemory = async () => {
-    await fetch(`${BACKEND_URL}/api/clear-memory`, {
-      method: 'POST'
-    })
-    setMemory([])
-    setResponse('🧹 Memory cleared.')
-  }
+  const AGENT_URL = 'https://riven-node-agent-production.up.railway.app/riven'
 
   const handleSubmit = async () => {
     if (!input.trim()) return
     setLoading(true)
     try {
-      const res = await fetch(`${BACKEND_URL}/api/echo`, {
+      const res = await fetch(AGENT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: input })
       })
       const data = await res.json()
-      setResponse(data.message || 'No response')
+      setResponse(data.response || 'No response')
       setInput('')
-      fetchMemory()
+
+      setMemory(prev => [...prev, {
+        message: input,
+        timestamp: Date.now()
+      }])
     } catch {
-      setResponse('Error contacting Riven Node.')
+      setResponse('⚠️ Error contacting RIVEN agent.')
     }
     setLoading(false)
   }
 
-  useEffect(() => {
-    fetchMemory()
-  }, [])
+  const clearMemory = () => {
+    setMemory([])
+    setResponse('🧹 Local memory cleared.')
+  }
 
   return (
     <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6">
