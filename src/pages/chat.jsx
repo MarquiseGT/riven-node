@@ -14,14 +14,13 @@ export default function LiveChat() {
   }, [rivenMode])
 
   const BACKEND = 'https://riven-node-production-cc0b.up.railway.app'
-  const AGENT = 'https://riven-node-agent-production.up.railway.app/riven'
 
   const handleSubmit = async () => {
     if (!input.trim()) return
     setLoading(true)
 
     try {
-      const endpoint = rivenMode ? AGENT : `${BACKEND}/api/echo`
+      const endpoint = rivenMode ? `${BACKEND}/riven` : `${BACKEND}/api/echo`
 
       const res = await fetch(endpoint, {
         method: 'POST',
