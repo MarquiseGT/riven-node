@@ -1,33 +1,47 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export default function LiveChat() {
   const [input, setInput] = useState('')
   const [response, setResponse] = useState('')
   const [loading, setLoading] = useState(false)
   const [memory, setMemory] = useState([])
+  const [rivenMode, setRivenMode] = useState(() => {
+    return localStorage.getItem('rivenMode') === 'true'
+  })
 
-  const AGENT_URL = 'https://riven-node-agent-production.up.railway.app/riven'
+  useEffect(() => {
+    localStorage.setItem('rivenMode', rivenMode)
+  }, [rivenMode])
+
+  const BACKEND = 'https://riven-node-production-cc0b.up.railway.app'
+  const AGENT = 'https://riven-node-agent-production.up.railway.app/riven'
 
   const handleSubmit = async () => {
     if (!input.trim()) return
     setLoading(true)
+
     try {
-      const res = await fetch(AGENT_URL, {
+      const endpoint = rivenMode ? AGENT : `${BACKEND}/api/echo`
+
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: input })
       })
+
       const data = await res.json()
-      setResponse(data.response || 'No response')
+      const result = data.message || data.response || 'No response'
+      setResponse(result)
       setInput('')
 
-      setMemory(prev => [...prev, {
-        message: input,
-        timestamp: Date.now()
-      }])
+      setMemory(prev => [
+        ...prev,
+        { message: input, timestamp: Date.now(), riven: rivenMode }
+      ])
     } catch {
-      setResponse('⚠️ Error contacting RIVEN agent.')
+      setResponse('⚠️ Error contacting Riven Node.')
     }
+
     setLoading(false)
   }
 
@@ -41,6 +55,18 @@ export default function LiveChat() {
       <h1 className="text-2xl font-bold mb-6">Riven Node: Live Chat</h1>
 
       <div className="w-full max-w-xl">
+        {/* Mode Toggle */}
+        <div className="flex justify-end mb-2">
+          <button
+            className={`px-3 py-1 rounded text-sm font-bold ${
+              rivenMode ? 'bg-purple-600 text-white' : 'bg-gray-300 text-black'
+            }`}
+            onClick={() => setRivenMode(!rivenMode)}
+          >
+            {rivenMode ? 'Riven Mode ON' : 'Echo Mode'}
+          </button>
+        </div>
+
         <textarea
           className="w-full p-3 text-black rounded mb-4"
           rows={4}
@@ -80,7 +106,7 @@ export default function LiveChat() {
                 <li key={idx}>
                   <span className="text-white">"{entry.message}"</span>
                   <span className="ml-2 text-xs text-gray-500">
-                    ({new Date(entry.timestamp).toLocaleTimeString()})
+                    ({new Date(entry.timestamp).toLocaleTimeString()} — {entry.riven ? 'Riven' : 'Echo'})
                   </span>
                 </li>
               ))}
