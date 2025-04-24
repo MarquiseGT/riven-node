@@ -70,7 +70,3 @@ app.post('/api/clear-memory', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`🧠 Riven Node backend live on port ${PORT}`)
 })
-
-app.get('/', (req, res) => {
-  res.send('🧠 Riven Agent is live. POST to /riven.');
-});
